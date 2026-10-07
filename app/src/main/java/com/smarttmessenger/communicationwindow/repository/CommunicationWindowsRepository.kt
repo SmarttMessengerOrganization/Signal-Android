@@ -17,6 +17,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import org.signal.core.util.concurrent.SignalExecutors
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.dependencies.AppDependencies
+import org.thoughtcrime.securesms.keyvalue.SignalStore
 
 /**
  * Single source of truth for communication-window data, modeled on NotificationProfilesRepository:
@@ -94,20 +95,37 @@ class CommunicationWindowsRepository(private val context: Context) {
 
   /** Retry every locally-changed-but-unpushed window. Call at startup / on reconnect. */
   fun syncPending() {
+    if (notRegisteredYet()) return
     SignalExecutors.BOUNDED_IO.execute { pushPendingBlocking() }
   }
 
   /**
-   * Full startup sync: push local changes first, then pull the server's state down. The order
-   * matters — pulling first would race the pending pushes. On a fresh install there is nothing to
-   * push, so this is also what restores the user's windows after a reinstall or on a new device.
+   * Push local changes first, then pull the server's state down. The order matters — pulling first
+   * would race the pending pushes. On a fresh install there is nothing to push, so this is also
+   * what restores the user's windows after a reinstall or on a new device.
+   *
+   * Safe to call whenever the window UI is opened; it is cheap and self-limiting.
    */
   fun syncAll() {
+    if (notRegisteredYet()) return
     SignalExecutors.BOUNDED_IO.execute {
       pushPendingBlocking()
       runCatching { pullFromServerBlocking() }
         .onFailure { Log.w(TAG, "syncFromServer failed; local windows may be stale", it) }
     }
+  }
+
+  /**
+   * Every sync route needs credentials. `ApplicationContext` kicks one off at process start, which
+   * on a fresh install happens *before* the user registers — those requests would all 401 and the
+   * failure would be swallowed, which is exactly why a reinstall used to come back with no windows.
+   */
+  private fun notRegisteredYet(): Boolean {
+    if (SignalStore.account.isRegistered) {
+      return false
+    }
+    Log.d(TAG, "Not registered yet; skipping window sync")
+    return true
   }
 
   /** Caller must be off the main thread. */

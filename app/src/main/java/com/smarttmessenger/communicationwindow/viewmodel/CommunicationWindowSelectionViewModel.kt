@@ -25,6 +25,12 @@ class CommunicationWindowSelectionViewModel(repository: CommunicationWindowsRepo
   init {
     disposables += repository.getWindows()
       .subscribeBy(onNext = { windows -> store.update { windows } })
+
+    // Reconcile with the server every time the list is opened. The startup sync in
+    // ApplicationContext runs before registration on a fresh install, so without this a reinstalled
+    // user sees an empty list while the server still holds messages for windows they can't see.
+    // Reads are reactive off the local table, so pulled rows appear here on their own.
+    repository.syncAll()
   }
 
   override fun onCleared() {
