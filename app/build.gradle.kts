@@ -23,7 +23,7 @@ apply(from = "static-ips.gradle.kts")
 
 val canonicalVersionCode = 1568
 val canonicalVersionName = "7.51.3"
-val currentHotfixVersion = 11
+val currentHotfixVersion = 12
 val maxHotfixVersions = 100
 
 val keystores: Map<String, Properties?> = mapOf("debug" to loadKeystoreProperties("keystore.debug.properties"))
@@ -194,8 +194,8 @@ android {
     buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
     buildConfigField("String", "SIGNAL_URL", "\"https://chat.staging.smarttmessenger.com\"")
     buildConfigField("String", "STORAGE_URL", "\"https://storage.staging.smarttmessenger.com\"")
-    buildConfigField("String", "SIGNAL_CDN_URL", "\"https://cdn.signal.org\"")
-    buildConfigField("String", "SIGNAL_CDN2_URL", "\"https://cdn2.signal.org\"")
+    buildConfigField("String", "SIGNAL_CDN_URL", "\"https://cdn.staging.smarttmessenger.com\"")
+    buildConfigField("String", "SIGNAL_CDN2_URL", "\"https://cdn2.staging.smarttmessenger.com\"")
     buildConfigField("String", "SIGNAL_CDN3_URL", "\"https://cdn3.staging.smarttmessenger.com\"")
     buildConfigField("String", "SIGNAL_CDSI_URL", "\"https://cdsi.staging.smarttmessenger.com\"")
     buildConfigField("String", "SIGNAL_SERVICE_STATUS_URL", "\"uptime.signal.org\"")
