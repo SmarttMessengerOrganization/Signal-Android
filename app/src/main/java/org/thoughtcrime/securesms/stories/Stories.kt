@@ -61,7 +61,7 @@ object Stories {
   /**
    * Whether or not the user has the Stories feature enabled.
    */
-  // [Smartt] Stories are not part of Smartt, so this reports disabled unconditionally. Upstream
+  // [Smartt: no-stories] Stories are not part of Smartt, so this reports disabled unconditionally. Upstream
   // returned `!SignalStore.story.isFeatureDisabled` — the `SignalStore` import it was the only user
   // of was removed with it. Every UI gate reads this function, so the one line hides the nav tab,
   // the share sheet section, the camera Chat/Story toggle, the avatar story rings and the group

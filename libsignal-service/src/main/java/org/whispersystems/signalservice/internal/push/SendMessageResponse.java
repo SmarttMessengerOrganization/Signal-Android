@@ -28,7 +28,7 @@ public class SendMessageResponse {
     this.sentUnidentfied = value;
   }
 
-  // [Smartt] Communication window: the server sets these extra fields when it holds the message
+  // [Smartt: comm-window] The server sets these extra fields when it holds the message
   // instead of delivering it. Kept in one trailing block for merge isolation.
   @JsonProperty
   private boolean communicationWindowHeld;

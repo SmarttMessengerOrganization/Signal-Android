@@ -17,7 +17,7 @@ class CommunicationWindowsActivity : PassphraseRequiredActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?, ready: Boolean) {
     super.onCreate(savedInstanceState, ready)
-    setContentView(R.layout.activity_smartt_communication_windows)
+    setContentView(R.layout.smartt_activity_communication_windows)
 
     if (savedInstanceState != null) return
 

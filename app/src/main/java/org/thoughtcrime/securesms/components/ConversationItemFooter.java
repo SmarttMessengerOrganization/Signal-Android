@@ -387,7 +387,7 @@ public class ConversationItemFooter extends ConstraintLayout {
       return;
     }
 
-    if (com.smarttmessenger.communicationwindow.cache.SmarttWindowHeldCache.INSTANCE.applyHeldStatus(getContext(), messageRecord, deliveryStatusView)) return; // [Smartt] window-held cloud icon
+    if (com.smarttmessenger.communicationwindow.cache.SmarttWindowHeldCache.INSTANCE.applyHeldStatus(getContext(), messageRecord, deliveryStatusView)) return; // [Smartt: comm-window] window-held cloud icon
 
     if (onlyShowSendingStatus) {
       if (messageRecord.isOutgoing() && messageRecord.isPending()) {

@@ -14,7 +14,7 @@ import com.smarttmessenger.upgrade.model.SmarttPurchase
 
 /**
  * What the upgrade screen is showing. [active] is the program the user has "bought" during this
- * visit — see [SmarttUpgradeViewModel] for why that is as far as it goes.
+ * visit — see `SmarttUpgradeViewModel` for why that is as far as it goes.
  */
 data class SmarttUpgradeState(
   val selectedPlan: SmarttPlanId = SmarttPlanId.PRO,

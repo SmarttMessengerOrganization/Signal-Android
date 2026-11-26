@@ -18,7 +18,7 @@ enum class SmarttPlanId { PRO, PARENTAL }
 enum class SmarttBillingPeriod { MONTHLY, YEARLY }
 
 /**
- * A purchasable program. Prices are plain euros; see [SmarttPricing] for formatting.
+ * A purchasable program. Prices are plain euros; see `SmarttPricing` for formatting.
  */
 @Immutable
 data class SmarttPlan(

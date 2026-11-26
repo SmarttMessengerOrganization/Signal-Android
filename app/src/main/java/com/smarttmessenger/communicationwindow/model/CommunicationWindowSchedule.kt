@@ -1,6 +1,5 @@
 package com.smarttmessenger.communicationwindow.model
 
-import java.time.DayOfWeek
 import java.time.ZonedDateTime
 
 /**
@@ -10,8 +9,8 @@ import java.time.ZonedDateTime
  */
 data class CommunicationWindowSchedule(
   val enabled: Boolean = true,
-  val start: Int = 9 * 60,   // 9:00 AM
-  val end: Int = 17 * 60,    // 5:00 PM
+  val start: Int = 9 * 60, // 9:00
+  val end: Int = 17 * 60, // 17:00
   val daysEnabled: Set<Int> = setOf(1, 2, 3, 4, 5) // Mon–Fri
 ) {
   fun isCurrentlyActive(now: ZonedDateTime): Boolean {
@@ -25,20 +24,5 @@ data class CommunicationWindowSchedule(
     } else {
       currentMinutes >= start && currentMinutes < end
     }
-  }
-
-  fun startFormatted(): String = minutesToAmPm(start)
-  fun endFormatted(): String = minutesToAmPm(end)
-
-  private fun minutesToAmPm(minutes: Int): String {
-    val h = minutes / 60
-    val m = minutes % 60
-    val amPm = if (h < 12) "AM" else "PM"
-    val displayH = when {
-      h == 0 -> 12
-      h > 12 -> h - 12
-      else -> h
-    }
-    return "%d:%02d %s".format(displayH, m, amPm)
   }
 }

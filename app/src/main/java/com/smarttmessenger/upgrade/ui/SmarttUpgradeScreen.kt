@@ -66,7 +66,7 @@ import org.thoughtcrime.securesms.R
  * Sells Smartt Pro and Parental Control: pick a billing period, pick a program, read what each one
  * lifts compared to the free tier.
  *
- * Purchasing is a mockup — the CTA only moves [SmarttUpgradeState.active].
+ * Purchasing is a mockup — the CTA only moves `SmarttUpgradeState.active`.
  */
 @Composable
 fun SmarttUpgradeScreen(

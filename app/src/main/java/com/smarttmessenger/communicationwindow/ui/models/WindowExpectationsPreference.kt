@@ -57,7 +57,7 @@ object WindowExpectationsPreference {
         WindowExpectations.CheckFrequency.values().forEach { freq ->
           val chip = inflater.inflate(R.layout.smartt_expectation_chip, frequencyGroup, false) as Chip
           chip.id = View.generateViewId()
-          chip.text = freq.label
+          chip.setText(freq.label)
           chip.setOnCheckedChangeListener { _, isChecked -> if (isChecked && !binding) emit() }
           frequencyChips[chip.id] = freq
           frequencyGroup.addView(chip)
@@ -65,7 +65,7 @@ object WindowExpectationsPreference {
         WindowExpectations.UsualReplyTime.values().forEach { time ->
           val chip = inflater.inflate(R.layout.smartt_expectation_chip, replyGroup, false) as Chip
           chip.id = View.generateViewId()
-          chip.text = time.label
+          chip.setText(time.label)
           chip.setOnCheckedChangeListener { _, isChecked -> if (isChecked && !binding) emit() }
           replyChips[chip.id] = time
           replyGroup.addView(chip)

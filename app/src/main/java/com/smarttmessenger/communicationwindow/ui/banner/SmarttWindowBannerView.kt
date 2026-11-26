@@ -7,8 +7,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
+import com.smarttmessenger.communicationwindow.model.WindowExpectations
 import com.smarttmessenger.communicationwindow.network.WindowMetadataResponse
 import org.thoughtcrime.securesms.R
+import org.thoughtcrime.securesms.util.formatHours
+import java.time.LocalTime
 
 class SmarttWindowBannerView(context: Context) {
 
@@ -35,16 +38,30 @@ class SmarttWindowBannerView(context: Context) {
       return
     }
 
-    val startFormatted = minutesToAmPm(metadata.windowStartMinutes)
-    val endFormatted = minutesToAmPm(metadata.windowEndMinutes)
-    title.text = "${recipientName}'s communication window is closed from $startFormatted to $endFormatted"
+    val context = root.context
+    title.text = context.getString(
+      R.string.CommunicationWindow__banner_closed,
+      recipientName,
+      formatMinutes(metadata.windowStartMinutes),
+      formatMinutes(metadata.windowEndMinutes)
+    )
 
     // One view instance is reused for every recipient, so each row's visibility must be set on every
     // bind. Only ever showing rows would leak the previous contact's expectations onto this banner.
     val exp = metadata.expectations
-    checkFrequency.setTextOrHide(exp?.checkFrequency?.let { "Usual check frequency: ${it.lowercase().replace('_', ' ')}" })
-    replyTime.setTextOrHide(exp?.usualReplyTime?.let { "Usual reply time: ${it.lowercase().replace('_', ' ')}" })
-    personalNote.setTextOrHide(exp?.personalNote?.let { "\"$it\"" })
+    checkFrequency.setTextOrHide(
+      exp?.checkFrequency?.let {
+        val label = WindowExpectations.CheckFrequency.fromServerValue(it)?.let { freq -> context.getString(freq.label) } ?: unknownValue(it)
+        context.getString(R.string.CommunicationWindow__banner_check_frequency, label)
+      }
+    )
+    replyTime.setTextOrHide(
+      exp?.usualReplyTime?.let {
+        val label = WindowExpectations.UsualReplyTime.fromServerValue(it)?.let { time -> context.getString(time.label) } ?: unknownValue(it)
+        context.getString(R.string.CommunicationWindow__banner_reply_time, label)
+      }
+    )
+    personalNote.setTextOrHide(exp?.personalNote?.let { context.getString(R.string.CommunicationWindow__banner_personal_note, it) })
 
     root.isVisible = true
     setExpanded(true)
@@ -67,11 +84,10 @@ class SmarttWindowBannerView(context: Context) {
     isVisible = value != null
   }
 
-  private fun minutesToAmPm(minutes: Int): String {
-    val h = minutes / 60
-    val m = minutes % 60
-    val amPm = if (h < 12) "AM" else "PM"
-    val displayH = when { h == 0 -> 12; h > 12 -> h - 12; else -> h }
-    return "%d:%02d %s".format(displayH, m, amPm)
-  }
+  /** Minutes since midnight, in the phone's 12- or 24-hour format. */
+  private fun formatMinutes(minutes: Int): String =
+    LocalTime.of(minutes / 60 % 24, minutes % 60).formatHours(root.context)
+
+  /** A value newer than this build: shown as the server sent it, as it was before it had a label. */
+  private fun unknownValue(value: String): String = value.lowercase().replace('_', ' ')
 }

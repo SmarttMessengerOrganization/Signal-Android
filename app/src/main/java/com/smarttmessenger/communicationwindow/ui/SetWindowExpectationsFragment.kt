@@ -22,7 +22,7 @@ import org.thoughtcrime.securesms.util.views.CircularProgressMaterialButton
  * Check frequency + reply time are single-select choice chips (Material ChipGroup), and a free-text
  * personal note. All written to the shared draft.
  */
-class SetWindowExpectationsFragment : LoggingFragment(R.layout.fragment_smartt_set_expectations) {
+class SetWindowExpectationsFragment : LoggingFragment(R.layout.smartt_fragment_set_expectations) {
 
   private val draftVm: CommunicationWindowDraftViewModel by activityViewModels(
     factoryProducer = { CommunicationWindowDraftViewModel.Factory(requireContext().applicationContext) }
@@ -46,7 +46,7 @@ class SetWindowExpectationsFragment : LoggingFragment(R.layout.fragment_smartt_s
     WindowExpectations.CheckFrequency.values().forEach { freq ->
       val chip = layoutInflater.inflate(R.layout.smartt_expectation_chip, frequencyGroup, false) as Chip
       chip.id = View.generateViewId()
-      chip.text = freq.label
+      chip.setText(freq.label)
       chip.isChecked = expectations.checkFrequency == freq
       frequencyChips[chip.id] = freq
       frequencyGroup.addView(chip)
@@ -56,7 +56,7 @@ class SetWindowExpectationsFragment : LoggingFragment(R.layout.fragment_smartt_s
     WindowExpectations.UsualReplyTime.values().forEach { time ->
       val chip = layoutInflater.inflate(R.layout.smartt_expectation_chip, replyGroup, false) as Chip
       chip.id = View.generateViewId()
-      chip.text = time.label
+      chip.setText(time.label)
       chip.isChecked = expectations.usualReplyTime == time
       replyChips[chip.id] = time
       replyGroup.addView(chip)

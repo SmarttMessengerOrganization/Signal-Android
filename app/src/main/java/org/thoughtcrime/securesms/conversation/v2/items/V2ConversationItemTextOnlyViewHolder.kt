@@ -26,7 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import com.smarttmessenger.communicationwindow.cache.SmarttWindowHeldCache // [Smartt]
+import com.smarttmessenger.communicationwindow.cache.SmarttWindowHeldCache // [Smartt: comm-window]
 import org.signal.core.util.StringUtil
 import org.signal.core.util.dp
 import org.thoughtcrime.securesms.R
@@ -768,7 +768,7 @@ open class V2ConversationItemTextOnlyViewHolder<Model : MappingModel<Model>>(
       return
     }
 
-    if (SmarttWindowHeldCache.applyHeldStatus(context, record, deliveryStatus)) return // [Smartt] window-held cloud icon
+    if (SmarttWindowHeldCache.applyHeldStatus(context, record, deliveryStatus)) return // [Smartt: comm-window] window-held cloud icon
 
     when {
       record.isPending -> deliveryStatus.setPending()

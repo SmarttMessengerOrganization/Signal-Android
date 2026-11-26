@@ -85,6 +85,16 @@
     <string name="CommunicationWindow__s_until_s">%1$s until %2$s</string>
     <string name="CommunicationWindow__every_day">Every day</string>
 
+    <!-- Chat banner shown to the sender while the recipient's communication window is closed -->
+    <!-- Banner title. First placeholder is the recipient's name, second and third the start and end times. -->
+    <string name="CommunicationWindow__banner_closed">%1$s\'s communication window is closed from %2$s to %3$s</string>
+    <!-- Banner row with how often the recipient checks messages. Placeholder is one of the check frequency labels, such as "Once an hour". -->
+    <string name="CommunicationWindow__banner_check_frequency">Usual check frequency: %1$s</string>
+    <!-- Banner row with when the recipient usually replies. Placeholder is one of the reply time labels, such as "Within an hour". -->
+    <string name="CommunicationWindow__banner_reply_time">Usual reply time: %1$s</string>
+    <!-- Banner row quoting the recipient's personal note. Placeholder is the note. -->
+    <string name="CommunicationWindow__banner_personal_note">\"%1$s\"</string>
+
     <!-- Connect WhatsApp feature -->
     <!-- Title of the Connect WhatsApp entry card shown at the top of the chat list -->
     <string name="ConnectWhatsApp_card__title">Connect WhatsApp</string>

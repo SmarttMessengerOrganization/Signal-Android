@@ -482,9 +482,7 @@ class ConversationFragment :
 
   private val shareDataTimestampViewModel: ShareDataTimestampViewModel by activityViewModels()
 
-  // [Smartt] Communication window banner
-  private var smarttWindowBannerManager: com.smarttmessenger.communicationwindow.ui.banner.SmarttWindowBannerManager? = null
-  // [/Smartt]
+  private var smarttWindowBannerManager: com.smarttmessenger.communicationwindow.ui.banner.SmarttWindowBannerManager? = null // [Smartt: comm-window] the sender-side window banner
 
   private val inlineQueryController: InlineQueryResultsControllerV2 by lazy {
     InlineQueryResultsControllerV2(
@@ -1363,7 +1361,7 @@ class ConversationFragment :
 
     updateMessageRequestAcceptedState(!viewModel.hasMessageRequestState)
 
-    smarttWindowBannerManager = com.smarttmessenger.communicationwindow.ui.banner.SmarttWindowBannerManager.update(smarttWindowBannerManager, requireContext(), binding.conversationBannerFrame, recipient) // [Smartt] sender-side window banner
+    smarttWindowBannerManager = com.smarttmessenger.communicationwindow.ui.banner.SmarttWindowBannerManager.update(smarttWindowBannerManager, requireContext(), binding.conversationBannerFrame, recipient) // [Smartt: comm-window] sender-side window banner
   }
 
   @MainThread
@@ -2820,15 +2818,24 @@ class ConversationFragment :
         return
       }
 
-      // [Smartt] Stories are not part of Smartt. Upstream opened StoryViewerActivity here; the
-      // launch was removed and only the early return kept, so tapping the quote of a story reply
-      // does nothing instead of opening the viewer. The return is upstream's — the parent story is
-      // not in this thread, so there is no position to move to. Only reachable for story replies
-      // already in the database from a build before Stories was hidden.
-      if (messageRecord.parentStoryId != null) {
+      val parentStoryId = messageRecord.parentStoryId
+      if (parentStoryId != null) {
+        // [Smartt: no-stories] Stories are hidden, so the quote of a story reply doesn't open the
+        // story viewer. Only reachable for story replies saved before Stories was hidden.
+        if (!org.thoughtcrime.securesms.stories.Stories.isFeatureEnabled()) return
+        // [/Smartt]
+        startActivity(
+          StoryViewerActivity.createIntent(
+            requireContext(),
+            StoryViewerArgs.Builder(quote.author, Recipient.resolved(quote.author).shouldHideStory)
+              .withStoryId(parentStoryId.asMessageId().id)
+              .isFromQuote(true)
+              .build()
+          )
+        )
+
         return
       }
-      // [/Smartt]
 
       handleMoveToQuotePosition(quote.id, quote.author)
     }

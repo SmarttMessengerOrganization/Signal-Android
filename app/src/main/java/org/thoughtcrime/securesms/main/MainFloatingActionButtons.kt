@@ -50,13 +50,13 @@ interface MainFloatingActionButtonsCallback {
   fun onNewChatClick()
   fun onNewCallClick()
   fun onCameraClick(destination: MainNavigationListLocation)
-  fun onCommunicationWindowClick() // [Smartt]
+  fun onCommunicationWindowClick() // [Smartt: comm-window] the chat list's window shortcut
 
   object Empty : MainFloatingActionButtonsCallback {
     override fun onNewChatClick() = Unit
     override fun onNewCallClick() = Unit
     override fun onCameraClick(destination: MainNavigationListLocation) = Unit
-    override fun onCommunicationWindowClick() = Unit // [Smartt]
+    override fun onCommunicationWindowClick() = Unit // [Smartt: comm-window]
   }
 }
 
@@ -94,7 +94,8 @@ fun MainFloatingActionButtons(
     SecondaryActionButton(
       destination = destination,
       boxHeightPx = boxHeightPx,
-      onCommunicationWindowClick = callback::onCommunicationWindowClick, // [Smartt]
+      onCameraClick = callback::onCameraClick,
+      onCommunicationWindowClick = callback::onCommunicationWindowClick, // [Smartt: comm-window]
       elevation = shadowElevation
     )
 
@@ -117,7 +118,8 @@ private fun BoxScope.SecondaryActionButton(
   destination: MainNavigationListLocation,
   boxHeightPx: Int,
   elevation: Dp,
-  onCommunicationWindowClick: () -> Unit // [Smartt] was onCameraClick
+  onCommunicationWindowClick: () -> Unit, // [Smartt: comm-window]
+  onCameraClick: (MainNavigationListLocation) -> Unit
 ) {
   val navigation = Navigation.rememberNavigation()
   val secondaryButtonAlignment = remember(navigation) {
@@ -146,15 +148,30 @@ private fun BoxScope.SecondaryActionButton(
   ) {
     val animatedElevation by transition.animateDp(targetValueByState = { if (it == EnterExitState.Visible) elevation else 0.dp })
 
-    // [Smartt] Communication window shortcut replaces the camera button on the chat list.
-    MainFloatingActionButton(
-      onClick = onCommunicationWindowClick,
-      icon = {
-        Icon(
-          imageVector = ImageVector.vectorResource(R.drawable.symbol_grid_square_24),
-          contentDescription = stringResource(R.string.CommunicationWindow__new_communication_window)
-        )
-      },
+    // [Smartt: comm-window] The communication window shortcut takes the camera button's place on the chat list
+    if (!com.smarttmessenger.core.SmarttHiddenFeatures.showsChatListCamera) {
+      MainFloatingActionButton(
+        onClick = onCommunicationWindowClick,
+        icon = {
+          Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.symbol_grid_square_24),
+            contentDescription = stringResource(R.string.CommunicationWindow__new_communication_window)
+          )
+        },
+        colors = IconButtonDefaults.filledTonalIconButtonColors().copy(
+          containerColor = when (navigation) {
+            Navigation.RAIL -> MaterialTheme.colorScheme.surface
+            Navigation.BAR -> SignalTheme.colors.colorSurface2
+          },
+          contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        shadowElevation = animatedElevation
+      )
+      return@AnimatedVisibility
+    }
+    // [/Smartt]
+
+    CameraButton(
       colors = IconButtonDefaults.filledTonalIconButtonColors().copy(
         containerColor = when (navigation) {
           Navigation.RAIL -> MaterialTheme.colorScheme.surface
@@ -162,6 +179,9 @@ private fun BoxScope.SecondaryActionButton(
         },
         contentColor = MaterialTheme.colorScheme.onSurface
       ),
+      onClick = {
+        onCameraClick(MainNavigationListLocation.CHATS)
+      },
       shadowElevation = animatedElevation
     )
   }
@@ -208,6 +228,27 @@ private fun PrimaryActionButton(
 }
 
 @Composable
+private fun CameraButton(
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  shadowElevation: Dp = 4.dp,
+  colors: IconButtonColors = IconButtonDefaults.filledTonalIconButtonColors()
+) {
+  MainFloatingActionButton(
+    onClick = onClick,
+    icon = {
+      Icon(
+        imageVector = ImageVector.vectorResource(R.drawable.symbol_camera_24),
+        contentDescription = stringResource(R.string.conversation_list_fragment__open_camera_description)
+      )
+    },
+    colors = colors,
+    modifier = modifier,
+    shadowElevation = shadowElevation
+  )
+}
+
+@Composable
 private fun MainFloatingActionButton(
   onClick: () -> Unit,
   icon: @Composable () -> Unit,
@@ -246,7 +287,7 @@ private fun MainFloatingActionButtonsNavigationRailPreview() {
         currentDestination = MainNavigationListLocation.CHATS
       }
 
-      override fun onCommunicationWindowClick() = Unit // [Smartt]
+      override fun onCommunicationWindowClick() = Unit // [Smartt: comm-window]
     }
   }
 
@@ -277,7 +318,7 @@ private fun MainFloatingActionButtonsNavigationBarPreview() {
         currentDestination = MainNavigationListLocation.CHATS
       }
 
-      override fun onCommunicationWindowClick() = Unit // [Smartt]
+      override fun onCommunicationWindowClick() = Unit // [Smartt: comm-window]
     }
   }
 

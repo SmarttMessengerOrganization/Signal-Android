@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -75,6 +76,7 @@ import org.thoughtcrime.securesms.compose.StatusBarColorNestedScrollConnection
 import org.thoughtcrime.securesms.database.model.InAppPaymentSubscriberRecord
 import org.thoughtcrime.securesms.profiles.ProfileName
 import org.thoughtcrime.securesms.recipients.Recipient
+import org.thoughtcrime.securesms.util.CommunicationActions
 import org.thoughtcrime.securesms.util.SignalE164Util
 import org.thoughtcrime.securesms.util.Util
 import org.thoughtcrime.securesms.util.navigation.safeNavigate
@@ -289,11 +291,47 @@ private fun AppSettingsContent(
           )
         }
 
-        // [Smartt] Donate to Signal is not part of the Smartt settings mockup. The upstream row that
-        // sat here — and the `colorResource` and `CommunicationActions` imports it was the only user
-        // of — was removed. Parental Control takes its place as the third row of the first group.
-        item { com.smarttmessenger.parental.ui.SmarttParentalControlRow() }
-        // [/Smartt]
+        item { com.smarttmessenger.parental.ui.SmarttParentalControlRow() } // [Smartt: parental-control] in the Donate row's place
+
+        item {
+          if (!com.smarttmessenger.core.SmarttHiddenFeatures.showsDonateRow) return@item // [Smartt: parental-control] hides Donate
+          val context = LocalContext.current
+          val donateUrl = stringResource(R.string.donate_url)
+
+          Rows.TextRow(
+            text = {
+              Text(
+                text = stringResource(R.string.preferences__donate_to_signal),
+                modifier = Modifier.weight(1f)
+              )
+
+              if (state.hasExpiredGiftBadge) {
+                Icon(
+                  painter = painterResource(R.drawable.symbol_info_fill_24),
+                  tint = colorResource(R.color.signal_accent_primary),
+                  contentDescription = null
+                )
+              }
+            },
+            icon = {
+              Icon(
+                painter = painterResource(R.drawable.symbol_heart_24),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface
+              )
+            },
+            onClick = {
+              if (state.allowUserToGoToDonationManagementScreen) {
+                callbacks.navigate(R.id.action_appSettingsFragment_to_manageDonationsFragment)
+              } else {
+                CommunicationActions.openBrowserLink(context, donateUrl)
+              }
+            },
+            onLongClick = {
+              callbacks.copyDonorBadgeSubscriberIdToClipboard()
+            }
+          )
+        }
 
         item {
           Dividers.Default()
@@ -320,11 +358,17 @@ private fun AppSettingsContent(
           )
         }
 
-        // [Smartt] Stories are not part of Smartt. The upstream "Stories" row that sat here — which
-        // opened StoryPrivacySettings, the one screen able to turn the feature back on — was
-        // removed. It was deliberately ungated upstream for exactly that reason, so hiding Stories
-        // means deleting the row rather than gating it.
-        // [/Smartt]
+        item {
+          if (!org.thoughtcrime.securesms.stories.Stories.isFeatureEnabled()) return@item // [Smartt: no-stories] hides the Stories row
+          Rows.TextRow(
+            text = stringResource(R.string.preferences__stories),
+            icon = painterResource(R.drawable.symbol_stories_24),
+            onClick = {
+              callbacks.navigate(AppSettingsFragmentDirections.actionAppSettingsFragmentToStoryPrivacySettings(R.string.preferences__stories))
+            },
+            enabled = isRegisteredAndUpToDate
+          )
+        }
 
         item {
           Rows.TextRow(

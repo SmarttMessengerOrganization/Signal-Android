@@ -87,7 +87,7 @@ data class MainNavigationState(
   val callsCount: Int = 0,
   val storiesCount: Int = 0,
   val storyFailure: Boolean = false,
-  // [Smartt] Defaulted to false (upstream: true) so the Stories tab cannot appear for the first
+  // [Smartt: no-stories] Defaulted to false (upstream: true) so the Stories tab cannot appear for the first
   // frame. This flag is pull-based — only MainActivity.onResume refreshes it — so the default is
   // what the initial composition and the previews below render with.
   val isStoriesFeatureEnabled: Boolean = false,

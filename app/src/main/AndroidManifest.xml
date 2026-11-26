@@ -1146,13 +1146,13 @@
               android:exported="false"
               android:theme="@style/Signal.DayNight.NoActionBar" />
 
-    <!-- [Smartt] Communication windows -->
+    <!-- [Smartt: comm-window] Communication windows -->
     <activity android:name="com.smarttmessenger.communicationwindow.ui.CommunicationWindowsActivity"
               android:exported="false"
               android:theme="@style/Signal.DayNight.NoActionBar" />
     <!-- [/Smartt] -->
 
-    <!-- [Smartt] Upgrade and Shop -->
+    <!-- [Smartt: upgrade-shop] Upgrade and Shop mockups -->
     <activity android:name="com.smarttmessenger.upgrade.ui.SmarttUpgradeActivity"
               android:exported="false"
               android:theme="@style/Signal.DayNight.NoActionBar" />
@@ -1162,7 +1162,7 @@
               android:theme="@style/Signal.DayNight.NoActionBar" />
     <!-- [/Smartt] -->
 
-    <!-- [Smartt] Parental Control -->
+    <!-- [Smartt: parental-control] Parental Control mockup -->
     <activity android:name="com.smarttmessenger.parental.ui.SmarttParentalActivity"
               android:exported="false"
               android:theme="@style/Signal.DayNight.NoActionBar" />
