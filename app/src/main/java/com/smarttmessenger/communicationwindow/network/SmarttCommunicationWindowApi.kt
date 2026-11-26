@@ -77,14 +77,17 @@ class SmarttCommunicationWindowApi(private val okHttpClient: OkHttpClient) {
     }
   }
 
-  private fun delete(path: String) {
+  /** @return false when the server answers 404: it has nothing at [path]. */
+  private fun delete(path: String): Boolean {
     val request = Request.Builder()
       .url(baseUrl() + path)
       .header("Authorization", authHeader())
       .delete()
       .build()
     okHttpClient.newCall(request).execute().use { response ->
+      if (response.code == 404) return false
       if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
+      return true
     }
   }
 
@@ -97,7 +100,11 @@ class SmarttCommunicationWindowApi(private val okHttpClient: OkHttpClient) {
   fun updateWindow(windowId: String, request: CommunicationWindowRequest): CommunicationWindowResponse =
     mapper.readValue(put("$BASE/$windowId", request))
 
-  fun deleteWindow(windowId: String) = delete("$BASE/$windowId")
+  /**
+   * @return false when the server has no such window (404), which callers treat as deleted: the
+   * server answers 204 when it deleted the window and 404 when there was none.
+   */
+  fun deleteWindow(windowId: String): Boolean = delete("$BASE/$windowId")
 
   /** [recipientServiceId] is an ACI (a bare UUID) or a PNI (`PNI:` + UUID); the server parses both. */
   fun getWindowMetadata(recipientServiceId: String): WindowMetadataResponse =

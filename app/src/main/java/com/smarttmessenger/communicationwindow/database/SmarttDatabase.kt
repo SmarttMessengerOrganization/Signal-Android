@@ -14,6 +14,7 @@ class SmarttDatabase private constructor(context: Context) :
   override fun onCreate(db: SQLiteDatabase) {
     db.execSQL(SmarttWindowHeldTable.CREATE_TABLE)
     db.execSQL(SmarttCommunicationWindowsTable.CREATE_TABLE)
+    db.execSQL(SmarttPendingWindowDeletesTable.CREATE_TABLE)
   }
 
   override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -21,11 +22,15 @@ class SmarttDatabase private constructor(context: Context) :
       // Local-first sync flag: 1 = changed locally, not yet pushed to our server.
       db.execSQL("ALTER TABLE ${SmarttCommunicationWindowsTable.TABLE_NAME} ADD COLUMN ${SmarttCommunicationWindowsTable.COL_NEEDS_SYNC} INTEGER NOT NULL DEFAULT 0")
     }
+    if (oldVersion < 3) {
+      // Deletes the server hasn't confirmed yet. Adds a table and leaves the windows as they are.
+      db.execSQL(SmarttPendingWindowDeletesTable.CREATE_TABLE)
+    }
   }
 
   companion object {
     private const val DATABASE_NAME = "smartt_data.db"
-    private const val DATABASE_VERSION = 2
+    private const val DATABASE_VERSION = 3
 
     @Volatile private var instance: SmarttDatabase? = null
 

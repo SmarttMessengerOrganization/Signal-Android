@@ -2,6 +2,7 @@ package com.smarttmessenger.communicationwindow.repository
 
 import android.content.Context
 import com.smarttmessenger.communicationwindow.database.SmarttCommunicationWindowsTable
+import com.smarttmessenger.communicationwindow.database.SmarttPendingWindowDeletesTable
 import com.smarttmessenger.communicationwindow.database.SmarttWindowsObserver
 import com.smarttmessenger.communicationwindow.model.CommunicationWindow
 import com.smarttmessenger.communicationwindow.network.CommunicationWindowRequest
@@ -31,9 +32,31 @@ import org.thoughtcrime.securesms.keyvalue.SignalStore
 class CommunicationWindowsRepository(private val context: Context) {
 
   private val localTable = SmarttCommunicationWindowsTable(context)
+  private val pendingDeletesTable = SmarttPendingWindowDeletesTable(context)
   private val api: SmarttCommunicationWindowApi by lazy {
     SmarttCommunicationWindowApi(AppDependencies.signalOkHttpClient)
   }
+
+  private val sync = CommunicationWindowSync(
+    store = object : CommunicationWindowSync.Store {
+      override fun getAll() = localTable.getAll()
+      override fun getPendingSync() = localTable.getPendingSync()
+      override fun markSynced(windowId: String) = localTable.markSynced(windowId)
+      override fun upsertFromServerIfNotPending(window: CommunicationWindow) = localTable.upsertFromServerIfNotPending(window)
+      override fun deleteIfNotPending(windowId: String) = localTable.deleteIfNotPending(windowId)
+      override fun deleteAndRememberDelete(windowId: String) = localTable.deleteAndRememberDelete(windowId, pendingDeletesTable)
+      override fun getPendingDeletes() = pendingDeletesTable.getAll()
+      override fun clearPendingDelete(windowId: String) = pendingDeletesTable.remove(windowId)
+    },
+    remote = object : CommunicationWindowSync.Remote {
+      override fun getWindows() = api.getWindows().map { it.toModel() }
+      override fun updateWindow(window: CommunicationWindow) {
+        api.updateWindow(window.windowId, CommunicationWindowRequest.from(window))
+      }
+      override fun deleteWindow(windowId: String) = api.deleteWindow(windowId)
+    },
+    log = { message, error -> Log.w(TAG, message, error) }
+  )
 
   // --- Reactive reads (mirror NotificationProfilesRepository.getProfiles/getProfile) ---
 
@@ -73,44 +96,40 @@ class CommunicationWindowsRepository(private val context: Context) {
     }.subscribeOn(Schedulers.io())
   }
 
+  /**
+   * Deletes on the device, remembers the delete, and deletes on the server in the background. If the
+   * server delete fails, every later sync retries it until the server confirms it (see
+   * [CommunicationWindowSync]), so the server stops holding messages for the window.
+   */
   fun delete(windowId: String): Completable {
     return Completable.fromAction {
-      localTable.delete(windowId)
-      SignalExecutors.BOUNDED_IO.execute {
-        runCatching { api.deleteWindow(windowId) }
-          .onFailure { Log.w(TAG, "Background delete failed for $windowId; will not retry", it) }
-      }
+      sync.deleteLocally(windowId)
+      SignalExecutors.BOUNDED_IO.execute { sync.pushDelete(windowId) }
     }.subscribeOn(Schedulers.io())
   }
 
   /** Fire-and-forget push of a single window; clears the needs-sync flag on success. */
   private fun pushToServer(window: CommunicationWindow) {
-    SignalExecutors.BOUNDED_IO.execute {
-      runCatching {
-        api.updateWindow(window.windowId, CommunicationWindowRequest.from(window))
-        localTable.markSynced(window.windowId)
-      }.onFailure { Log.w(TAG, "Background sync failed for ${window.windowId}; will retry on next syncPending()", it) }
-    }
+    SignalExecutors.BOUNDED_IO.execute { sync.pushChange(window) }
   }
 
-  /** Retry every locally-changed-but-unpushed window. Call at startup / on reconnect. */
+  /** Retry every pending delete, then every locally-changed-but-unpushed window. */
   fun syncPending() {
     if (notRegisteredYet()) return
-    SignalExecutors.BOUNDED_IO.execute { pushPendingBlocking() }
+    SignalExecutors.BOUNDED_IO.execute { sync.pushPending() }
   }
 
   /**
-   * Push local changes first, then pull the server's state down. The order matters — pulling first
-   * would race the pending pushes. On a fresh install there is nothing to push, so this is also
-   * what restores the user's windows after a reinstall or on a new device.
+   * Push pending deletes, then local changes, then pull the server's state down. The order matters:
+   * pulling first would race the pending pushes. On a fresh install there is nothing to push, so
+   * this is also what restores the user's windows after a reinstall or on a new device.
    *
    * Safe to call whenever the window UI is opened; it is cheap and self-limiting.
    */
   fun syncAll() {
     if (notRegisteredYet()) return
     SignalExecutors.BOUNDED_IO.execute {
-      pushPendingBlocking()
-      runCatching { pullFromServerBlocking() }
+      runCatching { sync.syncAll() }
         .onFailure { Log.w(TAG, "syncFromServer failed; local windows may be stale", it) }
     }
   }
@@ -128,37 +147,17 @@ class CommunicationWindowsRepository(private val context: Context) {
     return true
   }
 
-  /** Caller must be off the main thread. */
-  private fun pushPendingBlocking() {
-    localTable.getPendingSync().forEach { window ->
-      runCatching {
-        api.updateWindow(window.windowId, CommunicationWindowRequest.from(window))
-        localTable.markSynced(window.windowId)
-      }.onFailure { Log.w(TAG, "syncPending failed for ${window.windowId}", it) }
-    }
-  }
-
   /**
-   * Pull all windows from the server into the local table (e.g. fresh install / multi-device).
+   * Make the local table mirror the server (e.g. fresh install / multi-device): windows deleted on
+   * another device or on the server are removed here too.
    *
-   * Windows with unpushed local edits are skipped: the server copy is by definition older than what
-   * [syncPending] is still trying to send, so overwriting them here would silently discard the
-   * user's most recent change. They are left alone and reconciled once their push succeeds.
-   *
-   * Does not yet remove local windows the server no longer has — a window deleted on another device
-   * lingers locally until it is deleted here too.
+   * Two exceptions (see [CommunicationWindowSync.pull]): windows with unpushed local edits are left
+   * alone, because the server copy is older than what [syncPending] is still trying to send (and a
+   * new window must survive a pull that runs before its first push); and a window whose delete is
+   * still pending isn't brought back.
    */
   fun syncFromServer(): Completable {
-    return Completable.fromAction { pullFromServerBlocking() }.subscribeOn(Schedulers.io())
-  }
-
-  /** Caller must be off the main thread. */
-  private fun pullFromServerBlocking() {
-    val pendingIds = localTable.getPendingSync().map { it.windowId }.toSet()
-    api.getWindows()
-      .map { it.toModel() }
-      .filterNot { pendingIds.contains(it.windowId) }
-      .forEach { localTable.upsert(it, needsSync = false) }
+    return Completable.fromAction { sync.pull() }.subscribeOn(Schedulers.io())
   }
 
   /** [recipientServiceId] is the wire form of an ACI (a bare UUID) or a PNI (`PNI:` + UUID). */
