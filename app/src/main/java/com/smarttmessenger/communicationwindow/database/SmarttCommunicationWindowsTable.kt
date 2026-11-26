@@ -19,7 +19,65 @@ class SmarttCommunicationWindowsTable(private val context: Context) {
    * populated on read only, so a window read back and re-saved cannot silently clear its own flag.
    */
   fun upsert(window: CommunicationWindow, needsSync: Boolean = true) {
-    val values = ContentValues().apply {
+    db.insertWithOnConflict(TABLE_NAME, null, window.toContentValues(needsSync), android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
+    SmarttWindowsObserver.notifyChanged()
+  }
+
+  /**
+   * Writes the server's copy of a window, unless the device has changes to it not pushed yet. The
+   * check and the write are one transaction, so a save racing a pull keeps the user's change.
+   */
+  fun upsertFromServerIfNotPending(window: CommunicationWindow) {
+    val written = inTransaction {
+      if (isPendingSync(window.windowId)) {
+        false
+      } else {
+        db.insertWithOnConflict(TABLE_NAME, null, window.toContentValues(needsSync = false), android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
+        true
+      }
+    }
+    if (written) SmarttWindowsObserver.notifyChanged()
+  }
+
+  /** Removes a window the server no longer has, unless the device has changes to it not pushed yet. */
+  fun deleteIfNotPending(windowId: String) {
+    val deleted = db.delete(TABLE_NAME, "$COL_WINDOW_ID = ? AND $COL_NEEDS_SYNC = 0", arrayOf(windowId))
+    if (deleted > 0) SmarttWindowsObserver.notifyChanged()
+  }
+
+  /**
+   * Removes a window the user deleted and remembers the delete until the server confirms it
+   * ([SmarttPendingWindowDeletesTable]), in one transaction.
+   */
+  fun deleteAndRememberDelete(windowId: String, pendingDeletes: SmarttPendingWindowDeletesTable) {
+    inTransaction {
+      db.delete(TABLE_NAME, "$COL_WINDOW_ID = ?", arrayOf(windowId))
+      pendingDeletes.add(db, windowId)
+    }
+    SmarttWindowsObserver.notifyChanged()
+  }
+
+  private fun isPendingSync(windowId: String): Boolean {
+    db.query(TABLE_NAME, arrayOf(COL_NEEDS_SYNC), "$COL_WINDOW_ID = ?", arrayOf(windowId), null, null, null).use { cursor ->
+      return cursor.moveToFirst() && cursor.getInt(0) == 1
+    }
+  }
+
+  private fun <T> inTransaction(block: () -> T): T {
+    val database = db
+    database.beginTransaction()
+    try {
+      val result = block()
+      database.setTransactionSuccessful()
+      return result
+    } finally {
+      database.endTransaction()
+    }
+  }
+
+  private fun CommunicationWindow.toContentValues(needsSync: Boolean): ContentValues {
+    val window = this
+    return ContentValues().apply {
       put(COL_WINDOW_ID, window.windowId)
       put(COL_NAME, window.name)
       put(COL_EMOJI, window.emoji)
@@ -33,8 +91,6 @@ class SmarttCommunicationWindowsTable(private val context: Context) {
       put(COL_PERSONAL_NOTE, window.expectations.personalNote)
       put(COL_NEEDS_SYNC, if (needsSync) 1 else 0)
     }
-    db.insertWithOnConflict(TABLE_NAME, null, values, android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
-    SmarttWindowsObserver.notifyChanged()
   }
 
   /**
@@ -69,11 +125,6 @@ class SmarttCommunicationWindowsTable(private val context: Context) {
       if (cursor.moveToFirst()) return cursor.toWindow()
     }
     return null
-  }
-
-  fun delete(windowId: String) {
-    db.delete(TABLE_NAME, "$COL_WINDOW_ID = ?", arrayOf(windowId))
-    SmarttWindowsObserver.notifyChanged()
   }
 
   private fun android.database.Cursor.toWindow() = CommunicationWindow(
