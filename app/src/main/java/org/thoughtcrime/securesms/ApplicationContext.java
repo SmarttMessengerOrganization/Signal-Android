@@ -230,9 +230,9 @@ public class ApplicationContext extends Application implements AppForegroundObse
                             .addPostRender(RetryPendingSendsJob::enqueueForAll)
                             .execute();
 
-    // [Smartt] Load held message IDs into memory cache at startup
+    // [Smartt: comm-window] Load held message IDs into memory cache at startup
     com.smarttmessenger.communicationwindow.cache.SmarttWindowHeldCache.INSTANCE.init(this);
-    // [Smartt] Push any communication-window changes saved locally while offline, then pull the
+    // Push any communication-window changes saved locally while offline, then pull the
     // server's state down (this is what restores windows after a reinstall or on a new device).
     AppDependencies.getSmarttCommunicationWindowRepository().syncAll();
     // [/Smartt]

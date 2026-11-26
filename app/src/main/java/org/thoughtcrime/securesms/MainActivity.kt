@@ -867,10 +867,11 @@ class MainActivity : PassphraseRequiredActivity(), VoiceNoteMediaControllerOwner
       startActivity(NewCallActivity.createIntent(this@MainActivity))
     }
 
-    // [Smartt] Communication window shortcut → bottom sheet selector
+    // [Smartt: comm-window] Communication window shortcut → bottom sheet selector
     override fun onCommunicationWindowClick() {
       com.smarttmessenger.communicationwindow.ui.chatlist.CommunicationWindowSelectionFragment.show(supportFragmentManager)
     }
+    // [/Smartt]
 
     override fun onCameraClick(destination: MainNavigationListLocation) {
       val onGranted = {

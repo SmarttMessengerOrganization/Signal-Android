@@ -62,8 +62,8 @@ import com.google.android.material.animation.ArgbEvaluatorCompat;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.smarttmessenger.connectwhatsapp.ConnectWhatsAppBanner;      // [Smartt]
-import com.smarttmessenger.connectwhatsapp.ConnectWhatsAppBottomSheet; // [Smartt]
+import com.smarttmessenger.connectwhatsapp.ConnectWhatsAppBanner;      // [Smartt: connect-whatsapp]
+import com.smarttmessenger.connectwhatsapp.ConnectWhatsAppBottomSheet; // [Smartt: connect-whatsapp]
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -767,7 +767,7 @@ public class ConversationListFragment extends MainFragment implements Conversati
             bannerManager.updateContent(bannerView.get());
           }
         }),
-        // [Smartt] WhatsApp-connect banner
+        // [Smartt: connect-whatsapp] WhatsApp-connect banner (mockup)
         new ConnectWhatsAppBanner(() -> {
           ConnectWhatsAppBottomSheet.show(getParentFragmentManager());
           return Unit.INSTANCE;

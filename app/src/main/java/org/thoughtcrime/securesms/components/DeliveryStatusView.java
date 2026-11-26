@@ -81,7 +81,7 @@ public class DeliveryStatusView extends AppCompatImageView {
         case READ:
           setRead();
           break;
-        case WINDOW_HELD: // [Smartt]
+        case WINDOW_HELD: // [Smartt: comm-window]
           setWindowHeld();
           break;
       }
@@ -196,7 +196,7 @@ public class DeliveryStatusView extends AppCompatImageView {
     }
   }
 
-  // [Smartt] Communication window held state
+  // [Smartt: comm-window] Communication window held state
   public void setWindowHeld() {
     state = State.WINDOW_HELD;
     setVisibility(View.VISIBLE);
@@ -214,7 +214,7 @@ public class DeliveryStatusView extends AppCompatImageView {
     SENT(2, R.string.message_details_header_sent),
     DELIVERED(3, R.string.conversation_item_sent__delivered_description),
     READ(4, R.string.conversation_item_sent__message_read),
-    WINDOW_HELD(5, R.string.smartt_conversation_item_sent__window_held_description); // [Smartt]
+    WINDOW_HELD(5, R.string.smartt_conversation_item_sent__window_held_description); // [Smartt: comm-window]
 
     final int code;
 

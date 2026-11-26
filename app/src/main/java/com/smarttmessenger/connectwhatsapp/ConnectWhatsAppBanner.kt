@@ -72,7 +72,7 @@ private fun ConnectWhatsAppCard(contentPadding: PaddingValues, onConnectClick: (
         .background(colorResource(R.color.whatsapp_green))
     ) {
       Icon(
-        painter = painterResource(R.drawable.ic_whatsapp_glyph),
+        painter = painterResource(R.drawable.smartt_whatsapp_glyph),
         contentDescription = stringResource(R.string.ConnectWhatsApp__whatsapp_icon_content_description),
         tint = colorResource(R.color.core_white),
         modifier = Modifier.size(24.dp)

@@ -650,7 +650,7 @@ private fun WhatsAppTile(size: Dp, modifier: Modifier = Modifier) {
       .background(colorResource(R.color.whatsapp_green))
   ) {
     Icon(
-      painter = painterResource(R.drawable.ic_whatsapp_glyph),
+      painter = painterResource(R.drawable.smartt_whatsapp_glyph),
       contentDescription = stringResource(R.string.ConnectWhatsApp__whatsapp_icon_content_description),
       tint = colorResource(R.color.core_white),
       modifier = Modifier.size(size * WHATSAPP_ICON_SCALE)
@@ -662,7 +662,7 @@ private fun WhatsAppTile(size: Dp, modifier: Modifier = Modifier) {
 private fun AppIconTile(size: Dp, modifier: Modifier = Modifier) {
   // Renders the app's own owl logo as a rounded-square tile that mirrors the paired WhatsApp tile,
   // independent of the device's adaptive-icon mask shape. Uses a default-config vector
-  // (ic_owl_logo) so it resolves on every supported API level.
+  // (smartt_owl_logo) so it resolves on every supported API level.
   val shape = RoundedCornerShape(size / 4)
   Box(
     modifier = modifier
@@ -673,7 +673,7 @@ private fun AppIconTile(size: Dp, modifier: Modifier = Modifier) {
     contentAlignment = Alignment.Center
   ) {
     Image(
-      painter = painterResource(R.drawable.ic_owl_logo),
+      painter = painterResource(R.drawable.smartt_owl_logo),
       contentDescription = stringResource(R.string.ConnectWhatsApp__app_icon_content_description, stringResource(R.string.app_name)),
       modifier = Modifier.size(size)
     )

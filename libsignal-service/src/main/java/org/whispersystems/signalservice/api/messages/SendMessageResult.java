@@ -25,7 +25,7 @@ public class SendMessageResult {
     return new SendMessageResult(address, new Success(unidentified, needsSync, duration, content, devices), false, false, null, null, null, false);
   }
 
-  // [Smartt] Communication window: variant that carries the server's "message held" outcome.
+  // [Smartt: comm-window] Variant that carries the server's "message held" outcome.
   // Delegates to the upstream factory and sets the extra fields post-construction, so the
   // upstream constructor and factory above stay byte-identical (merge isolation).
   public static SendMessageResult success(SignalServiceAddress address, List<Integer> devices, boolean unidentified, boolean needsSync, long duration, Optional<Content> content, boolean communicationWindowHeld, long windowOpensAt) {
@@ -150,7 +150,7 @@ public class SendMessageResult {
       return devices;
     }
 
-    // [Smartt] Communication window held outcome — non-final, set only by the [Smartt] success()
+    // [Smartt: comm-window] Held outcome — non-final, set only by Smartt's success()
     // overload above, so the upstream constructor stays untouched (merge isolation).
     private boolean communicationWindowHeld;
     private long    windowOpensAt;

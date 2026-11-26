@@ -21,7 +21,7 @@ import org.thoughtcrime.securesms.keyvalue.SignalStore
 
 /**
  * Single source of truth for communication-window data, modeled on NotificationProfilesRepository:
- * **local-first**. Reads come reactively from the local table (via [SmarttWindowsObserver]); writes
+ * **local-first**. Reads come reactively from the local table (via `SmarttWindowsObserver`); writes
  * hit the local table immediately and are pushed to our server in the background (the equivalent of
  * NP's storage-service sync, but against our own Smartt REST API since the server enforces windows).
  *
